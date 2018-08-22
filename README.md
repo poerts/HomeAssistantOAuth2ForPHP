@@ -13,4 +13,4 @@
 1. 安装配置任意php环境
 2. 拷贝index.php文件至任意可访问目录(不建议修改文件名)，且目录允许php写入文件（用于refresh_token的保存）
 3. 浏览器访问index.php文件，界面会自动跳转到HomeAssistant登录页，登录后php路径下会写入一个数据文件（文件名为10位的字母+数字），标识token获取成功
-3. 浏览器访问index.php文件,使用get/post方式传值state=clientrequest，如“http://192.168.2.1/index.php?state=clientrequest&key=123”,浏览器输出json格式字符串的access_token值表示token获取成功
+3. 浏览器访问index.php文件,使用get/post方式传值state=clientrequest，如“http://192.168.2.1/index.php?state=clientrequest&key=123” ,浏览器输出json格式字符串的access_token值表示token获取成功
