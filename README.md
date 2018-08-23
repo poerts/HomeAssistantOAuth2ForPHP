@@ -15,6 +15,7 @@
 3. 浏览器访问index.php文件，界面会自动跳转到HomeAssistant登录页，登录后php路径下会写入一个数据文件（文件名为10位的字母+数字），标识token获取成功
 3. 浏览器访问index.php文件,使用get/post方式传值state=clientrequest，如“ http://192.168.2.1/index.php?state=clientrequest&key=123 ” ,浏览器输出json格式字符串的access_token值表示token获取成功
   > index.php的请求参数说明（get/post均可）：
-  >> * state（必填） : clientrequest
+  >> * state（必填） : clientrequesttoken 或 clientrequestapi
   >> * key（选填） : （配合二次认证使用）
-  >> * realtoken（选填）：值为1时，返回真实的可直接使用的token（格式：token_type+' '+access_token）；值为空时，返回HomeAssistant提供的token原形json字符串
+  >> * realtoken（配合state = clientrequesttoken 时使用）：值为1时，返回真实的可直接使用的token（格式：token_type+' '+access_token）；值为空时，返回HomeAssistant提供的token原形json字符串
+  >> * requestapi（配合state = clientrequestapi 时使用）：调用HomeAssistant的REST API时，URL地址栏的路径+完整参数（get方式），如“api/config”、“api/states/device_tracker.xxxxx”
