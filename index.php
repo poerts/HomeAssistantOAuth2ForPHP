@@ -27,6 +27,7 @@ $callbackUrlFullPath = dirname($webSiteUrl) . $callbackUrlPath;
 $AuthState = $_REQUEST["state"];
 $AuthCode = $_GET["code"];
 $AuthKEY = $_REQUEST["key"];
+$realToken = $_REQUEST["realtoken"];
 
 
 //request homeassistant
@@ -73,7 +74,15 @@ elseif (strtolower($AuthState) == "clientrequest")
 		return;
 	}
 	
-	echo $data;
+	
+	if ($realToken == "1" || strtolower($realToken)=="y")
+	{
+		echo $obj["token_type"]." ". $obj["access_token"];
+	}
+	else
+	{
+		echo $data;
+	}
 	return;
 }
 
