@@ -3,7 +3,7 @@
 ########################################################################
 #HomeAssistant中开启了auth_providers模式
 #配置HomeAssistant的URL访问地址（必填）
-$webSite = "http://192.168.2.9:8123";
+$webSite = "192.168.1.1:8123";
 
 #数据存储文件名定义，可任意定义，存储时会二次加密文件名（必填）
 $storeFileName = "db.config";
@@ -32,7 +32,9 @@ $AuthKEY = $_REQUEST["key"];
 //request homeassistant
 if ($AuthState == "requestAuth" && $AuthCode != "")
 {
-	requestToken();
+	$data = requestToken();
+	echo $data;
+	return;
 }
 // client request
 elseif (strtolower($AuthState) == "clientrequest")
@@ -65,6 +67,8 @@ elseif (strtolower($AuthState) == "clientrequest")
 	if ($obj["error"] != null)
 	{
 		ResetGlobal($storeRealFileName);
+		$data = '{"error":"'.$obj["error"].'"}';
+		echo $data;
 		return;
 	}
 	
@@ -88,17 +92,18 @@ function requestToken(){
 	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 	curl_setopt($ch, CURLOPT_POSTFIELDS,$data_string);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); 
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true); 
 	curl_setopt($ch, CURLOPT_URL,$url);
 	$data = curl_exec($ch); 
 	
-	
-	
 	$obj = json_decode($data,true);
+	
+	//echo var_dump($obj);
+	
 	$objToken = array("access_token"=>"111");
 	$obj = array_diff_key($obj,$objToken);
-	
+
 	$save = SetGlobal($storeRealFileName,json_encode($obj));
 	
 	curl_close($ch);
@@ -122,8 +127,8 @@ function refreshToken($refreshToken){
 	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 	curl_setopt($ch, CURLOPT_POSTFIELDS,$data_string);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); 
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true); 
 	curl_setopt($ch, CURLOPT_URL,$url);
 	$data = curl_exec($ch); 
 	
@@ -155,9 +160,9 @@ function GetGlobal($name)
 } 
 
 ?>
-<html>
+<!DOCTYPE html>
 <script type = "text/javascript">
-$(function() {
+window.onload = function() {
 var state="<?echo $_GET["state"];?>";
 var ClientID = '<?echo ($ClientID);?>';
 var callbackUrl = "<?echo ($callbackUrlFullPath);?>";
@@ -173,6 +178,6 @@ else
 {
 	return;
 }
-});
+}
 </script>
 </html>
