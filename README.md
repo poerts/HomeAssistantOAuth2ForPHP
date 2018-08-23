@@ -13,8 +13,9 @@
 1. 安装配置任意php环境，且所在目录拥有写入权限
 2. 拷贝index.php文件至任意可访问目录(不建议修改文件名)，且目录允许php写入文件（用于refresh_token的保存（加密存储））
 3. 编辑index.php文件，修改最上方“$webSite=”的值，改为HomeAssistant的刚问路径（支持http/https）,如“https://home.xxxx.com:8123” 。key值可改可不改，为安全起见建议key值做配置（可任意定义）
-4. 浏览器访问index.php文件，界面会自动跳转到HomeAssistant登录页，登录后php路径下会写入一个数据文件（文件名为10位的字母+数字），标识token获取成功
-5. 浏览器访问index.php文件,使用get/post方式传值state=clientrequest，如“ https://home.xxxx.com/index.php?state=clientrequest&key=123 ” ,浏览器输出json格式字符串的access_token值表示token获取成功。（如果之前的步骤配置了key值，这里访问http时需要携带key值的传参）
+4. 【登录，网关服务端建立token】浏览器访问index.php文件，界面会自动跳转到HomeAssistant登录页，登录后php路径下会写入一个数据文件（文件名为10位的字母+数字），标识token获取成功
+5. 【获取token】浏览器访问index.php文件,使用get/post方式传值state=clientrequesttoken，如“ https://home.xxxx.com/index.php?state=clientrequest&key=123 ” ,浏览器输出json格式字符串的access_token值表示token获取成功。（如果之前的步骤配置了key值，这里访问http时需要携带key值的传参）
+6. 【调用RestAPI】浏览器访问index.php文件,使用get/post方式传值state=clientrequestapi，并同时携带requestapi参数，如“https://home.xxxx.com/index.php?state=clientrequestapi&key=123&requestapi=/api/config ”,正常情况下浏览器会返回json格式的字符串（同访问HomeAssistant时{https://home.xxxx.com:8123/api/config }返回的结果相同）,相当于绕开auth认证替代了直接访问HomeAssistant完成REST API请求的过程
   > index.php的请求参数说明（get/post均可）：
   >> * state（必填） : clientrequesttoken 或 clientrequestapi
   >> * key（选填） : （配合二次认证使用）
