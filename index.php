@@ -3,7 +3,7 @@
 ########################################################################
 #HomeAssistant中开启了auth_providers模式
 #配置HomeAssistant的URL访问地址（必填）
-$webSite = "192.168.1.1:8123";
+$webSite = "http://192.168.2.1:8123";
 
 #数据存储文件名定义，可任意定义，存储时会二次加密文件名（必填）
 $storeFileName = "db.config";
@@ -28,7 +28,7 @@ $AuthState = $_REQUEST["state"];
 $AuthCode = $_GET["code"];
 $AuthKEY = $_REQUEST["key"];
 $realToken = $_REQUEST["realtoken"];
-
+$requestAPI = $_REQUEST["requestapi"];
 
 //request homeassistant
 if ($AuthState == "requestAuth" && $AuthCode != "")
@@ -37,15 +37,13 @@ if ($AuthState == "requestAuth" && $AuthCode != "")
 	echo $data;
 	return;
 }
-// client request
-elseif (strtolower($AuthState) == "clientrequest")
+// client request token
+elseif (strtolower($AuthState) == "clientrequesttoken")
 {
 	if (!$key == null)
 	{
-		
 		if ($key != $AuthKEY)
 		{
-			
 			$data = '{"error":"key is invilid"}';
 			echo $data;
 			return;
@@ -53,15 +51,13 @@ elseif (strtolower($AuthState) == "clientrequest")
 	}
 	
 	$data = getToken();
-	
 	if ($data == null)
 	{
 		$data = '{"error":"Token has expired, please open the website \''.$callbackUrlFullPath.'\' to create a token"}';
 		echo $data;
 		return;
 	}
-	
-	
+
 	$obj = json_decode($data,true);
 	$data = refreshToken($obj["refresh_token"]);
 	$obj = json_decode($data,true);
@@ -74,7 +70,6 @@ elseif (strtolower($AuthState) == "clientrequest")
 		return;
 	}
 	
-	
 	if ($realToken == "1" || strtolower($realToken)=="y")
 	{
 		echo $obj["token_type"]." ". $obj["access_token"];
@@ -84,6 +79,45 @@ elseif (strtolower($AuthState) == "clientrequest")
 		echo $data;
 	}
 	return;
+}
+// client request api
+elseif (strtolower($AuthState) == "clientrequestapi" && $requestAPI != null)
+{
+	if (!$key == null)
+	{
+		if ($key != $AuthKEY)
+		{
+			$data = '{"error":"key is invilid"}';
+			echo $data;
+			return;
+		}
+	}
+	
+	$data = getToken();
+	if ($data == null)
+	{
+		$data = '{"error":"Token has expired, please open the website \''.$callbackUrlFullPath.'\' to create a token"}';
+		echo $data;
+		return;
+	}
+
+	$obj = json_decode($data,true);
+	$data = refreshToken($obj["refresh_token"]);
+	$obj = json_decode($data,true);
+	
+	if ($obj["error"] != null)
+	{
+		ResetGlobal($storeRealFileName);
+		$data = '{"error":"'.$obj["error"].'"}';
+		echo $data;
+		return;
+	}
+	
+	$realToken = $obj["token_type"]." ". $obj["access_token"];
+	
+	echo requestAPI($requestAPI,$realToken);
+	return;
+	
 }
 
 function requestToken(){
@@ -142,6 +176,43 @@ function refreshToken($refreshToken){
 	curl_setopt($ch, CURLOPT_URL,$url);
 	$data = curl_exec($ch); 
 	
+	curl_close($ch);
+	
+	return $data;
+}
+
+function requestAPI($apiUrl,$token){
+	global $storeRealFileName,$webSite,$AuthCode,$ClientID;
+	
+	if (substr($apiUrl,0,1) != "/"){
+		$apiUrl1 = "/" . $apiUrl;
+	}
+	else
+	{
+		$apiUrl1 = $apiUrl;
+	}
+
+	$url = $webSite . $apiUrl1;
+	//$data_string = "grant_type=authorization_code&code=" . $AuthCode . "&client_id=" . $ClientID;
+
+	//echo $url;
+	
+	$header = array();
+	$header[] = 'Accept:application/json';
+	$header[] = 'Content-Type:application/x-www-form-urlencoded';
+	$header[] = 'Authorization:'.$token;
+
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 10); 
+	curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+	//curl_setopt($ch, CURLOPT_POSTFIELDS,$data_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); 
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true); 
+	curl_setopt($ch, CURLOPT_URL,$url);
+	$data = curl_exec($ch); 
+
 	curl_close($ch);
 	
 	return $data;
