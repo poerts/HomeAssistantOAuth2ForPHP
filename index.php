@@ -52,6 +52,7 @@ elseif (strtolower($AuthState) == "clientrequest")
 	}
 	
 	$data = getToken();
+	
 	if ($data == null)
 	{
 		$data = '{"error":"Token has expired, please open the website \''.$callbackUrlFullPath.'\' to create a token"}';
@@ -150,12 +151,12 @@ function ResetGlobal($name)
 }
 function SetGlobal($name,$value)
 {
-   return file_put_contents($name,serialize($value));
+   return file_put_contents($name,base64_encode($value));
 }
 function GetGlobal($name)
 {
    if(!file_exists($name)) return null;  
-   $value=unserialize(file_get_contents($name)); 
+   $value=base64_decode(file_get_contents($name)); 
    return $value;
 } 
 
