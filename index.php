@@ -163,10 +163,10 @@ function GetGlobal($name)
 <!DOCTYPE html>
 <script type = "text/javascript">
 window.onload = function() {
-var state="<?echo $_GET["state"];?>";
-var ClientID = '<?echo ($ClientID);?>';
-var callbackUrl = "<?echo ($callbackUrlFullPath);?>";
-var webSiteHA = "<?echo $webSite;?>";
+var state="<?php echo $_REQUEST["state"];?>";
+var ClientID = '<?php echo ($ClientID);?>';
+var callbackUrl = "<?php echo ($callbackUrlFullPath);?>";
+var webSiteHA = "<?php echo $webSite;?>";
 
 var redirectURL = encodeURI(webSiteHA + "/auth/authorize?client_id=" + ClientID + "&redirect_uri=" + callbackUrl+"&state=requestAuth");
 
