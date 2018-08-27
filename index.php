@@ -3,7 +3,7 @@
 ########################################################################
 #HomeAssistant中开启了auth_providers模式
 #配置HomeAssistant的URL访问地址（必填）
-$webSite = "http://192.168.2.1:8123";
+$webSite = "https://home.xxxxxxxx.com";
 
 #数据存储文件名定义，可任意定义，存储时会二次加密文件名（必填）
 $storeFileName = "db.config";
@@ -30,6 +30,15 @@ $AuthKEY = $_REQUEST["key"];
 $realToken = $_REQUEST["realtoken"];
 $requestAPI = $_REQUEST["requestapi"];
 
+
+
+
+//echo "ClientID:". $http_type;
+#echo "</br>";
+#echo "requestAPI:". $$_REQUEST["requestapi"];
+#echo "</br>";
+//echo "123";
+//return;
 //request homeassistant
 if ($AuthState == "requestAuth" && $AuthCode != "")
 {
@@ -100,8 +109,11 @@ elseif (strtolower($AuthState) == "clientrequestapi" && $requestAPI != null)
 		echo $data;
 		return;
 	}
-
+	
+	
+		
 	$obj = json_decode($data,true);
+	
 	$data = refreshToken($obj["refresh_token"]);
 	$obj = json_decode($data,true);
 	
@@ -114,7 +126,7 @@ elseif (strtolower($AuthState) == "clientrequestapi" && $requestAPI != null)
 	}
 	
 	$realToken = $obj["token_type"]." ". $obj["access_token"];
-	
+
 	echo requestAPI($requestAPI,$realToken);
 	return;
 	
@@ -160,10 +172,23 @@ function refreshToken($refreshToken){
 	
 	$url = $webSite . "/auth/token";
 	$data_string = "grant_type=refresh_token&refresh_token=" . $refreshToken . "&client_id=" . $ClientID;
-
+	#$data_string = array();
+	#data_string[] = 'grant_type:refresh_token';
+	#data_string[] = 'refresh_token:'.$refreshToken;
+	#data_string[] = 'client_id:'.$ClientID;
+	
+	#$data_string = array(
+	#	'grant_type'=>'refresh_token',
+	#	'refresh_token'=>$refreshToken,
+	#	'client_id'=>$ClientID
+	#);
+	
 	$header = array();
 	$header[] = 'Accept:application/json';
 	$header[] = 'Content-Type:application/x-www-form-urlencoded';
+	//$header[] = 'Content-Type:application/json';
+	
+	//echo $data_string;
 	
 	$ch = curl_init($url);
 	curl_setopt($ch, CURLOPT_TIMEOUT, 10); 
@@ -191,30 +216,47 @@ function requestAPI($apiUrl,$token){
 	{
 		$apiUrl1 = $apiUrl;
 	}
-
+	
 	$url = $webSite . $apiUrl1;
 	//$data_string = "grant_type=authorization_code&code=" . $AuthCode . "&client_id=" . $ClientID;
 
-	//echo $url;
+	echo "url:".$url;
+	
 	
 	$header = array();
-	$header[] = 'Accept:application/json';
-	$header[] = 'Content-Type:application/x-www-form-urlencoded';
 	$header[] = 'Authorization:'.$token;
 
+	$input = file_get_contents('php://input');
+	if ($input != null){
+		$header[] = 'Content-Type:application/json';
+	}else{
+		$header[] = 'Content-Type:application/x-www-form-urlencoded';
+		
+	}
+	
+	//echo "url:".$url;
+	
 	$ch = curl_init($url);
 	curl_setopt($ch, CURLOPT_TIMEOUT, 10); 
 	curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
-	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+	//curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
 	//curl_setopt($ch, CURLOPT_POSTFIELDS,$data_string);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); 
 	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true); 
+	
+	if ($input != null){
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+		curl_setopt($ch, CURLOPT_POSTFIELDS,$input);
+	}else{
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+		
+	}
+
 	curl_setopt($ch, CURLOPT_URL,$url);
 	$data = curl_exec($ch); 
 
 	curl_close($ch);
-	
 	return $data;
 }
 
@@ -227,6 +269,7 @@ function getToken(){
 
 function ResetGlobal($name)
 {
+   //return null;
    return unlink($name);
 }
 function SetGlobal($name,$value)
