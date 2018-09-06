@@ -3,8 +3,7 @@
 ########################################################################
 #HomeAssistant中开启了auth_providers模式
 #配置HomeAssistant的URL访问地址（必填）
-$webSite = "https://xxx.xxx.xxx:44300";
-#$webSite = "http://home.meng-qi.com:48123";
+$webSite = "https://xxx.xxx.xxx";
 
 #当前请求站点的http协议方式(http或https)，为空时自动识别（配置为nginx反代时可能无法正确获取，则需要配置此变量值）
 $httpType = "";
