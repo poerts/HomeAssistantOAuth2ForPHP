@@ -3,13 +3,16 @@
 ########################################################################
 #HomeAssistant中开启了auth_providers模式
 #配置HomeAssistant的URL访问地址（必填）
-$webSite = "https://xxx.xxx.xxx";
+$webSite = "https://xxx.xxx.xxx:44300";
 
 #当前请求站点的http协议方式(http或https)，为空时自动识别（配置为nginx反代时可能无法正确获取，则需要配置此变量值）
 $httpType = "";
 
 #数据存储文件名定义，可任意定义，存储时会二次加密文件名（必填）
 $storeFileName = "db.config";
+
+#存储访问日志的文件名，为空时不存储日志
+$logFileName = "access.log";
 
 #访问当前文件index.php时的密钥KEY，可任意定义，也可以为空
 #密钥KEY不为空时，需要通过GET或POST将[key]传值，否则提示错误
@@ -39,7 +42,10 @@ $AuthKEY = $_REQUEST["key"];
 $realToken = $_REQUEST["realtoken"];
 $requestAPI = $_REQUEST["requestapi"];
 $tokenVilid = "false";
+$ip = $_SERVER['REMOTE_ADDR'];
 
+$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." request_state:".$AuthState." fullUrl:".$webSiteUrl;
+WriteLog($logFileName,$logContent);
 
 if ($AuthState == null){
 	$data = getToken();
@@ -47,6 +53,8 @@ if ($AuthState == null){
 	if ($data == null)
 	{
 		$data = '{"error1":"Token has expired, please open the website \''.$callbackUrlFullPath.'\' to create a token"}';
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		WriteLog($logFileName,$logContent);
 		echo $data;
 	}
 	else
@@ -63,6 +71,8 @@ if ($AuthState == null){
 		{
 			ResetGlobal($storeRealFileName);
 			$data = '{"error2":"'.$obj["error"].'"}';
+			$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+			WriteLog($logFileName,$logContent);
 			echo $data;
 		}
 		else
@@ -75,13 +85,19 @@ if ($AuthState == null){
 				$obj = json_decode($data,true);
 				if ($obj["message"] != null)
 				{
-					echo "Token is valid;";
+					$msg ="Token is valid;";
+					echo $msg;
+					$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$msg;
+					WriteLog($logFileName,$logContent);
 					$tokenVilid = "true";
 				}
 			}
 			catch(Exception $e)
 			{
-				echo "Token has expired;";
+				$msg ="Token has expired;";
+				echo $msg;
+				$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$msg;
+				WriteLog($logFileName,$logContent);
 				$tokenVilid = "false";
 			}
 			
@@ -92,6 +108,8 @@ elseif ($AuthState == "requestAuth" && $AuthCode != "")
 {
 	$data = requestToken();
 	echo $data;
+	$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:xxxxxxxxxxxxxxxxxxxxxxxxxx(vilid token)";
+	WriteLog($logFileName,$logContent);
 	return;
 }
 // client request token
@@ -103,6 +121,8 @@ elseif (strtolower($AuthState) == "clientrequesttoken")
 		{
 			$data = '{"error":"key is invilid"}';
 			echo $data;
+			$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		 	WriteLog($logFileName,$logContent);
 			return;
 		}
 	}
@@ -112,6 +132,8 @@ elseif (strtolower($AuthState) == "clientrequesttoken")
 	{
 		$data = '{"error":"Token has expired, please open the website \''.$callbackUrlFullPath.'\' to create a token"}';
 		echo $data;
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		WriteLog($logFileName,$logContent);
 		return;
 	}
 
@@ -124,16 +146,22 @@ elseif (strtolower($AuthState) == "clientrequesttoken")
 		ResetGlobal($storeRealFileName);
 		$data = '{"error":"'.$obj["error"].'"}';
 		echo $data;
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		WriteLog($logFileName,$logContent);
 		return;
 	}
 	
 	if ($realToken == "1" || strtolower($realToken)=="y")
 	{
 		echo $obj["token_type"]." ". $obj["access_token"];
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$obj["token_type"]." xxxxxxxxxxxxxxxxxxxxxxxxxx(vilid token)";
+		WriteLog($logFileName,$logContent);
 	}
 	else
 	{
 		echo $data;
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		WriteLog($logFileName,$logContent);
 	}
 	return;
 }
@@ -146,6 +174,8 @@ elseif (strtolower($AuthState) == "clientrequestapi" && $requestAPI != null)
 		{
 			$data = '{"error":"key is invilid"}';
 			echo $data;
+			$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+			WriteLog($logFileName,$logContent);
 			return;
 		}
 	}
@@ -155,6 +185,8 @@ elseif (strtolower($AuthState) == "clientrequestapi" && $requestAPI != null)
 	{
 		$data = '{"error":"Token has expired, please open the website \''.$callbackUrlFullPath.'\' to create a token"}';
 		echo $data;
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		WriteLog($logFileName,$logContent);
 		return;
 	}
 	
@@ -170,12 +202,16 @@ elseif (strtolower($AuthState) == "clientrequestapi" && $requestAPI != null)
 		ResetGlobal($storeRealFileName);
 		$data = '{"error":"'.$obj["error"].'"}';
 		echo $data;
+		$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$data;
+		WriteLog($logFileName,$logContent);
 		return;
 	}
 	
 	$realToken = $obj["token_type"]." ". $obj["access_token"];
 
 	echo requestAPI($requestAPI,$realToken);
+	$logContent = "time:".date("Y-m-d H:i:s")." IP:" .$ip." returnMessage:".$obj["token_type"]." xxxxxxxxxxxxxxxxxxxxxxxxxx(vilid token)";
+	WriteLog($logFileName,$logContent);
 	return;
 	
 }
@@ -338,6 +374,12 @@ function GetGlobal($name)
    $value=base64_decode(file_get_contents($name)); 
    return $value;
 } 
+function WriteLog($name,$value)
+{
+	if ($name != null){
+		file_put_contents($name,$value.PHP_EOL,FILE_APPEND);
+	}
+}
 
 ?>
 <!DOCTYPE html>
